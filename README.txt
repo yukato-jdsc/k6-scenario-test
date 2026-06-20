@@ -1,6 +1,7 @@
-## はじめに実行
-1. run-capture-auth-cookies.bat を実行してください。
-2. auth-cookies.local.json ファイルが生成されていることを確認してください。
+## はじめに
+以下の手順でログイン済みのクッキーを生成してください。
+1. run-capture-auth-cookies.bat を実行する
+2. auth-cookies.local.json ファイルが生成されていることを確認
 
-## シナリオテストの実行
-K6_BROWSER_HEADLESS=false K6 run tests/01_application-list-navigation.js 
+## シナリオテストの実行方法
+各 *.bat を実行してください（ファイル名はテスト番号を示します）
