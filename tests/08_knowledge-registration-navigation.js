@@ -2,7 +2,7 @@ import { Trend } from 'k6/metrics';
 import { concurrentUsers, runCookieNavigation } from './cookie-navigation.js';
 
 export const scenario7KnowledgeRegistrationDuration = new Trend(
-  'scenario_7_knowledge_registration_duration',
+  'scenario_8_knowledge_registration_duration',
   true,
 );
 

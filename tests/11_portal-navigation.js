@@ -1,7 +1,7 @@
 import { Trend } from 'k6/metrics';
 import { concurrentUsers, runCookieNavigation } from './cookie-navigation.js';
 
-export const scenario10PortalDuration = new Trend('scenario_10_portal_duration', true);
+export const scenario10PortalDuration = new Trend('scenario_11_portal_duration', true);
 
 export const options = {
   scenarios: {
