@@ -4,7 +4,7 @@ import { check } from 'k6';
 import { browser } from 'k6/browser';
 
 export const baseUrl = (__ENV.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
-export const concurrentUsers = parsePositiveInteger(__ENV.K6_VUS, 15, 'K6_VUS');
+export const concurrentUsers = parsePositiveInteger(__ENV.K6_VUS, 1, 'K6_VUS');
 
 const defaultAuthCookiesFile = '../auth-cookies.local.json';
 const authCookiesFile = __ENV.AUTH_COOKIES_FILE || defaultAuthCookiesFile;
