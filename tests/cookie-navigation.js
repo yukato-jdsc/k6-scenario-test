@@ -49,7 +49,7 @@ function validateAuthCookies(cookies) {
   }
 }
 
-const authCookies = loadAuthCookies();
+export const authCookies = loadAuthCookies();
 validateAuthCookies(authCookies);
 
 async function locatorIsVisible(locator) {
