@@ -6,7 +6,7 @@ import { browser } from 'k6/browser';
 import { Trend } from 'k6/metrics';
 import { authCookies, baseUrl, concurrentUsers } from './cookie-navigation.js';
 
-const sampleMailFileName = 'サンプルメール.eml';
+const sampleMailFileName = 'sample.eml';
 const sampleMailBytes = open(`../docs/${sampleMailFileName}`, 'b');
 const sampleMailBase64 = encoding.b64encode(sampleMailBytes);
 const scenario = {
