@@ -103,7 +103,29 @@ async function dropSampleMailFile(page) {
   );
 }
 
+async function waitForEnabledRegisterButton(page, timeout = 120000) {
+  const deadline = Date.now() + timeout;
+
+  while (Date.now() < deadline) {
+    const isEnabled = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('button')).some(
+        (button) => button.textContent.trim() === '登録' && !button.disabled,
+      ),
+    );
+
+    if (isEnabled) {
+      return;
+    }
+
+    await page.waitForTimeout(100);
+  }
+
+  throw new Error('クリック可能な登録ボタンが表示されませんでした');
+}
+
 async function clickEnabledRegisterButton(page) {
+  await waitForEnabledRegisterButton(page);
+
   await page.evaluate(() => {
     const registerButton = Array.from(document.querySelectorAll('button')).find(
       (button) => button.textContent.trim() === '登録' && !button.disabled,

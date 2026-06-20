@@ -1,5 +1,9 @@
+/* global __ENV */
+
 import { Trend } from 'k6/metrics';
 import { concurrentUsers, runCookieNavigation } from './cookie-navigation.js';
+
+const applicationId = __ENV.K6_APPLICATION_ID || '1';
 
 export const scenario5ConfirmationMailDraftDuration = new Trend(
   'scenario_5_confirmation_mail_draft_duration',
@@ -29,7 +33,7 @@ export default async function confirmationMailDraftNavigation() {
   await runCookieNavigation({
     number: 5,
     name: 'ヒアリングメールドラフト確認画面',
-    path: '/scb040101?applicationId=9&missing_field_ids=120',
+    path: `/scb040101?applicationId=${encodeURIComponent(applicationId)}&missing_field_ids=120`,
     visibleLocators: (page) => [page.getByRole('heading', { name: '確認依頼メール作成', level: 2 })],
     trend: scenario5ConfirmationMailDraftDuration,
   });
