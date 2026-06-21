@@ -3,7 +3,7 @@ setlocal
 
 set K6_BROWSER_HEADLESS=false
 set K6_VUS=1
-set BASE_URL=https://dev.houjin-backoffice.tm.softbank.co.jp
+call "%~dp0config.bat"
 
 
 k6 run tests/08_knowledge-registration-navigation.js

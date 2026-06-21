@@ -2,7 +2,7 @@
 setlocal
 
 set K6_BROWSER_HEADLESS=true
-set BASE_URL=https://dev.houjin-backoffice.tm.softbank.co.jp
+call "%~dp0config.bat"
 set K6_USERNAME=9000417L2
 set K6_PASSWORD=PassWord$99
 

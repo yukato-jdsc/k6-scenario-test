@@ -2,4 +2,5 @@ result.txt
 auth-cookies.local.json
 app
 *.swp
+*.zip
 ~$*
