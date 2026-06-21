@@ -3,7 +3,7 @@
 import { Trend } from 'k6/metrics';
 import { concurrentUsers, runCookieNavigation } from './cookie-navigation.js';
 
-const applicationId = __ENV.K6_APPLICATION_ID || '1';
+const applicationId = __ENV.APPLICATION_ID || '1';
 
 export const scenario6ApplicationReviewDuration = new Trend(
   'scenario_6_application_review_duration',

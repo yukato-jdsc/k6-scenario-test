@@ -5,21 +5,21 @@ import { browser } from 'k6/browser';
 import { Trend } from 'k6/metrics';
 import { authCookies, baseUrl, concurrentUsers } from './cookie-navigation.js';
 
-const applicationId = __ENV.APPLICATION_ID || '2';
+const applicationId = __ENV.APPLICATION_ID || '6';
 const scenario = {
-  number: 13,
-  name: 'LLMによる顧客情報抽出・提供条件特定処理',
-  path: `/scb020101?applicationId=${encodeURIComponent(applicationId)}`,
+  number: 14,
+  name: '確認依頼メール作成処理',
+  path: `/scc010501?applicationId=${encodeURIComponent(applicationId)}`,
 };
 
-export const scenario13CustomerConfirmProcessingDuration = new Trend(
-  'scenario_13_customer_confirm_processing_duration',
+export const scenario14ConfirmationMailDraftProcessingDuration = new Trend(
+  'scenario_14_confirmation_mail_draft_processing_duration',
   true,
 );
 
 export const options = {
   scenarios: {
-    customer_confirm_processing: {
+    confirmation_mail_draft_processing: {
       executor: 'shared-iterations',
       vus: concurrentUsers,
       iterations: concurrentUsers,
@@ -32,7 +32,7 @@ export const options = {
   },
   thresholds: {
     checks: ['rate==1.0'],
-    scenario_13_customer_confirm_processing_duration: ['p(95)<120000'],
+    scenario_14_confirmation_mail_draft_processing_duration: ['p(95)<120000'],
   },
 };
 
@@ -109,7 +109,29 @@ async function clickEnabledButton(page, buttonText) {
   }, buttonText);
 }
 
-export default async function customerConfirmProcessing() {
+async function waitForTextPresence(page, text, shouldBePresent, timeout = 120000) {
+  const deadline = Date.now() + timeout;
+
+  while (Date.now() < deadline) {
+    const isPresent = await page.evaluate((targetText) => document.body.textContent.includes(targetText), text);
+
+    if (isPresent === shouldBePresent) {
+      return;
+    }
+
+    await page.waitForTimeout(100);
+  }
+
+  throw new Error(
+    `${text} が ${shouldBePresent ? '表示' : '非表示'} になるまでにタイムアウトしました`,
+  );
+}
+
+async function textIsPresent(page, text) {
+  return page.evaluate((targetText) => document.body.textContent.includes(targetText), text);
+}
+
+export default async function confirmationMailDraftProcessing() {
   const context = await browser.newContext();
   let page;
 
@@ -120,7 +142,7 @@ export default async function customerConfirmProcessing() {
     await page.goto(`${baseUrl}${scenario.path}`, { waitUntil: 'networkidle' });
 
     const initialScreen = await waitForAuthenticatedScreen(page, scenario.name, [
-      page.getByText('メール分析の結果 - 企業情報の確認'),
+      page.getByText('メール分析の結果 - 申請内容の確認'),
     ]);
 
     if (initialScreen === 'signIn') {
@@ -132,24 +154,6 @@ export default async function customerConfirmProcessing() {
       );
     }
 
-    const customerSelectionHeadingIsVisible = await page
-      .getByText('メール分析の結果 - 企業情報の確認')
-      .isVisible();
-
-    check(page, {
-      [`#${scenario.number} 顧客候補確認画面が表示される`]: () =>
-        customerSelectionHeadingIsVisible,
-    });
-
-    const startedAt = Date.now();
-
-    await clickEnabledButton(page, '確定して次へ');
-    await page
-      .getByText('メール分析の結果 - 申請内容の確認')
-      .waitFor({ state: 'visible', timeout: 120000 });
-
-    scenario13CustomerConfirmProcessingDuration.add(Date.now() - startedAt);
-
     const applicationReviewHeadingIsVisible = await page
       .getByText('メール分析の結果 - 申請内容の確認')
       .isVisible();
@@ -157,6 +161,37 @@ export default async function customerConfirmProcessing() {
     check(page, {
       [`#${scenario.number} 申請内容確認画面が表示される`]: () =>
         applicationReviewHeadingIsVisible,
+    });
+
+    const startedAt = Date.now();
+
+    await clickEnabledButton(page, '確認依頼メールを作成');
+
+    const loadingSpinnerText = '確認メールドラフトを作成中';
+    await waitForTextPresence(page, loadingSpinnerText, true);
+
+    const spinnerIsVisible = await textIsPresent(page, loadingSpinnerText);
+    check(page, {
+      [`#${scenario.number} 確認メールドラフト作成中スピナーが表示される`]: () =>
+        spinnerIsVisible,
+    });
+
+    await waitForTextPresence(page, loadingSpinnerText, false);
+
+    scenario14ConfirmationMailDraftProcessingDuration.add(Date.now() - startedAt);
+
+    const confirmationMailDraftHeadingIsVisible = await page
+      .getByRole('heading', { name: '確認依頼メール作成', level: 2 })
+      .isVisible();
+    const draftBodyIsVisible = await page.getByText('確認メールドラフト').isVisible();
+    const spinnerIsHidden = !(await textIsPresent(page, loadingSpinnerText));
+
+    check(page, {
+      [`#${scenario.number} 確認依頼メール作成画面が表示される`]: () =>
+        confirmationMailDraftHeadingIsVisible,
+      [`#${scenario.number} 確認メールドラフトが表示される`]: () => draftBodyIsVisible,
+      [`#${scenario.number} 確認メールドラフト作成中スピナーが消える`]: () =>
+        spinnerIsHidden,
     });
   } finally {
     if (page) {
