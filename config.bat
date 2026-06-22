@@ -5,16 +5,19 @@ set "K6_TEST_NO=%~1"
 
 if "%K6_TEST_NO%"=="" goto :eof
 
-set "K6_VUS=1"
+rem K6実行結果の出力先を準備する
+set "RESULTS_DIR=%~dp0results"
+if not exist "%RESULTS_DIR%" mkdir "%RESULTS_DIR%"
 
-if "%K6_TEST_NO%"=="01" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="02" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="03" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="04" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="05" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="06" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="07" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="08" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="09" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="10" set "K6_VUS=10"
-if "%K6_TEST_NO%"=="11" set "K6_VUS=10"
+set "K6_RESULT_FILE_PREFIX=%RESULTS_DIR%\%K6_TEST_NO%"
+
+rem 画面表示系テストは負荷確認用に同時実行数を増やす
+set "DEFAULT_VUS=1"
+set "HIGH_LOAD_VUS=10"
+set "HIGH_LOAD_TESTS=01 02 03 04 05 06 07 08 09 10 11"
+
+set "K6_VUS=%DEFAULT_VUS%"
+
+for %%T in (%HIGH_LOAD_TESTS%) do (
+  if "%K6_TEST_NO%"=="%%T" set "K6_VUS=%HIGH_LOAD_VUS%"
+)
