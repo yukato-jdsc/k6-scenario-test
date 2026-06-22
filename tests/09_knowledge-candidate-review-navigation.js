@@ -35,7 +35,7 @@ export const options = {
   },
   thresholds: {
     checks: ['rate==1.0'],
-    scenario_9_knowledge_extraction_processing_duration: ['p(95)<120000'],
+    scenario_9_knowledge_extraction_processing_duration: ['p(95)<1000'],
   },
 };
 
@@ -152,13 +152,9 @@ async function clickEnabledButton(page, buttonText) {
 }
 
 function waitForKnowledgeExtractionResponse(page) {
-  return page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/knowledges/extract') &&
-      response.request().method() === 'POST' &&
-      response.status() < 400,
-    { timeout: 120000 },
-  );
+  return page.waitForResponse(/\/api\/knowledges\/extract\/?(?:[?#].*)?$/, {
+    timeout: 120000,
+  });
 }
 
 export default async function knowledgeExtractionProcessing() {

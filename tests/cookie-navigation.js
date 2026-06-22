@@ -92,29 +92,16 @@ async function waitForScreen(page, scenario) {
   throw new Error(`${scenario.name} が表示されませんでした`);
 }
 
-function responseMatchesTarget(response, target) {
-  const url = response.url();
-  const pathname = new URL(url).pathname;
-  const method = response.request().method();
-  const status = response.status();
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-  if (status >= 400) {
-    return false;
-  }
-
-  if (target.method && method !== target.method) {
-    return false;
-  }
-
+function responseTargetToPattern(target) {
   if (target.path) {
-    return url.includes(target.path);
+    return new RegExp(escapeRegExp(target.path));
   }
 
-  if (target.pathname) {
-    return pathname === target.pathname;
-  }
-
-  return false;
+  return new RegExp(`${escapeRegExp(target.pathname)}/?(?:[?#].*)?$`);
 }
 
 function waitForTargetResponses(page, scenario) {
@@ -127,12 +114,9 @@ function waitForTargetResponses(page, scenario) {
 
   return Promise.all(
     responseTargets.map((target) =>
-      page.waitForResponse(
-        (response) => responseMatchesTarget(response, target),
-        {
-          timeout: target.timeout || 10000,
-        },
-      ),
+      page.waitForResponse(responseTargetToPattern(target), {
+        timeout: target.timeout || 10000,
+      }),
     ),
   );
 }
