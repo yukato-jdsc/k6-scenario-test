@@ -30,6 +30,7 @@ export default async function mailRegistrationEditNavigation() {
     number: 3,
     name: 'メール依頼内容登録画面（確認・編集）',
     path: '/scb010102-edit',
+    responseTargets: [{ pathname: '/scb010102-edit', method: 'GET' }],
     visibleLocators: (page) => [page.getByText('メール内容（確認・編集）')],
     trend: scenario3MailRegistrationEditDuration,
   });

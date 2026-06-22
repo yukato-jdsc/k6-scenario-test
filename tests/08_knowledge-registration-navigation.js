@@ -30,6 +30,7 @@ export default async function knowledgeRegistrationNavigation() {
     number: 8,
     name: '経験知登録画面',
     path: '/scg010101',
+    responseTargets: [{ pathname: '/scg010101', method: 'GET' }],
     visibleLocators: (page) => [page.getByText('引継書をアップロード')],
     trend: scenario8KnowledgeRegistrationDuration,
   });

@@ -34,7 +34,15 @@ export default async function confirmationMailDraftNavigation() {
     number: 5,
     name: 'ヒアリングメールドラフト確認画面',
     path: `/scb040101?applicationId=${encodeURIComponent(applicationId)}&missing_field_ids=120`,
-    visibleLocators: (page) => [page.getByRole('heading', { name: '確認依頼メール作成', level: 2 })],
+    responseTargets: [
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}/confirmation-email-draft`,
+        method: 'POST',
+      },
+    ],
+    visibleLocators: (page) => [
+      page.getByRole('heading', { name: '確認依頼メール作成', level: 2 }),
+    ],
     trend: scenario5ConfirmationMailDraftDuration,
   });
 }

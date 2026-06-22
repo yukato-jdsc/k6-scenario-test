@@ -3,7 +3,10 @@
 import { check } from 'k6';
 import { browser } from 'k6/browser';
 
-export const baseUrl = (__ENV.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+export const baseUrl = (__ENV.BASE_URL || 'http://localhost:3000').replace(
+  /\/$/,
+  '',
+);
 export const concurrentUsers = parsePositiveInteger(__ENV.K6_VUS, 1, 'K6_VUS');
 
 const defaultAuthCookiesFile = '../auth-cookies.local.json';
@@ -35,16 +38,23 @@ function loadAuthCookies() {
 
 function validateAuthCookies(cookies) {
   if (!Array.isArray(cookies)) {
-    throw new Error('AUTH_COOKIES_FILE must contain a JSON array of browser cookies');
+    throw new Error(
+      'AUTH_COOKIES_FILE must contain a JSON array of browser cookies',
+    );
   }
 
   for (const cookie of cookies) {
-    if (!cookie.name || !Object.prototype.hasOwnProperty.call(cookie, 'value')) {
+    if (
+      !cookie.name ||
+      !Object.prototype.hasOwnProperty.call(cookie, 'value')
+    ) {
       throw new Error('Each auth cookie must include name and value');
     }
 
     if (!cookie.url && (!cookie.domain || !cookie.path)) {
-      throw new Error('Each auth cookie must include url or both domain and path');
+      throw new Error(
+        'Each auth cookie must include url or both domain and path',
+      );
     }
   }
 }
@@ -82,6 +92,51 @@ async function waitForScreen(page, scenario) {
   throw new Error(`${scenario.name} が表示されませんでした`);
 }
 
+function responseMatchesTarget(response, target) {
+  const url = response.url();
+  const pathname = new URL(url).pathname;
+  const method = response.request().method();
+  const status = response.status();
+
+  if (status >= 400) {
+    return false;
+  }
+
+  if (target.method && method !== target.method) {
+    return false;
+  }
+
+  if (target.path) {
+    return url.includes(target.path);
+  }
+
+  if (target.pathname) {
+    return pathname === target.pathname;
+  }
+
+  return false;
+}
+
+function waitForTargetResponses(page, scenario) {
+  const responseTargets = scenario.responseTargets || [
+    {
+      path: scenario.path,
+      method: 'GET',
+    },
+  ];
+
+  return Promise.all(
+    responseTargets.map((target) =>
+      page.waitForResponse(
+        (response) => responseMatchesTarget(response, target),
+        {
+          timeout: target.timeout || 10000,
+        },
+      ),
+    ),
+  );
+}
+
 export async function runCookieNavigation(scenario) {
   const context = await browser.newContext();
   let page;
@@ -90,22 +145,29 @@ export async function runCookieNavigation(scenario) {
     await context.addCookies(authCookies);
 
     page = await context.newPage();
+    const responsePromise = waitForTargetResponses(page, scenario);
     const startedAt = Date.now();
 
-    await page.goto(`${baseUrl}${scenario.path}`, { waitUntil: 'networkidle' });
+    const navigationPromise = page.goto(`${baseUrl}${scenario.path}`, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await responsePromise;
+    scenario.trend.add(Date.now() - startedAt);
+
+    await navigationPromise;
 
     const screen = await waitForScreen(page, scenario);
 
     if (screen === 'signIn') {
       check(page, {
-        [`#${scenario.number} Cookie注入時にログイン画面へ戻されない`]: () => false,
+        [`#${scenario.number} Cookie注入時にログイン画面へ戻されない`]: () =>
+          false,
       });
       throw new Error(
         'Cookie注入後もログイン画面が表示されました。Cookieの期限切れ、domain、pathを確認してください。',
       );
     }
-
-    scenario.trend.add(Date.now() - startedAt);
 
     check(page, {
       [`#${scenario.number} ${scenario.name} が表示される`]: () => true,

@@ -34,7 +34,15 @@ export default async function applicationReviewNavigation() {
     number: 6,
     name: '申込書作成・入力項目一覧画面',
     path: `/scc010501?applicationId=${encodeURIComponent(applicationId)}`,
-    visibleLocators: (page) => [page.getByText('メール分析の結果 - 申請内容の確認')],
+    responseTargets: [
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}/field-evidences`,
+        method: 'GET',
+      },
+    ],
+    visibleLocators: (page) => [
+      page.getByText('メール分析の結果 - 申請内容の確認'),
+    ],
     trend: scenario6ApplicationReviewDuration,
   });
 }

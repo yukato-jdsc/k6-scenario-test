@@ -34,7 +34,19 @@ export default async function customerSelectionNavigation() {
     number: 4,
     name: '顧客候補確認・選択画面',
     path: `/scb020101?applicationId=${encodeURIComponent(applicationId)}`,
-    visibleLocators: (page) => [page.getByText('メール分析の結果 - 企業情報の確認')],
+    responseTargets: [
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}`,
+        method: 'GET',
+      },
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}/bfs-entries`,
+        method: 'GET',
+      },
+    ],
+    visibleLocators: (page) => [
+      page.getByText('メール分析の結果 - 企業情報の確認'),
+    ],
     trend: scenario4CustomerSelectionDuration,
   });
 }

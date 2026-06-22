@@ -71,8 +71,10 @@ async function waitForAuthenticatedScreen(page, scenarioName, visibleLocators) {
 async function dropKnowledgeFile(page) {
   await page.evaluate(
     ({ base64, fileName }) => {
-      const uploadTarget = Array.from(document.querySelectorAll('[class*="cursor-pointer"]')).find(
-        (element) => element.textContent.includes('クリックしてアップロード'),
+      const uploadTarget = Array.from(
+        document.querySelectorAll('[class*="cursor-pointer"]'),
+      ).find((element) =>
+        element.textContent.includes('クリックしてアップロード'),
       );
 
       if (!uploadTarget) {
@@ -149,6 +151,16 @@ async function clickEnabledButton(page, buttonText) {
   }, buttonText);
 }
 
+function waitForKnowledgeExtractionResponse(page) {
+  return page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/knowledges/extract') &&
+      response.request().method() === 'POST' &&
+      response.status() < 400,
+    { timeout: 120000 },
+  );
+}
+
 export default async function knowledgeExtractionProcessing() {
   const context = await browser.newContext();
   let page;
@@ -159,14 +171,16 @@ export default async function knowledgeExtractionProcessing() {
     page = await context.newPage();
     await page.goto(`${baseUrl}${scenario.path}`, { waitUntil: 'networkidle' });
 
-    const initialScreen = await waitForAuthenticatedScreen(page, scenario.name, [
-      page.getByText('経験知登録'),
-      page.getByText('引継書をアップロード'),
-    ]);
+    const initialScreen = await waitForAuthenticatedScreen(
+      page,
+      scenario.name,
+      [page.getByText('経験知登録'), page.getByText('引継書をアップロード')],
+    );
 
     if (initialScreen === 'signIn') {
       check(page, {
-        [`#${scenario.number} Cookie注入時にログイン画面へ戻されない`]: () => false,
+        [`#${scenario.number} Cookie注入時にログイン画面へ戻されない`]: () =>
+          false,
       });
       throw new Error(
         'Cookie注入後もログイン画面が表示されました。Cookieの期限切れ、domain、pathを確認してください。',
@@ -174,24 +188,36 @@ export default async function knowledgeExtractionProcessing() {
     }
 
     await dropKnowledgeFile(page);
-    await page.getByText(knowledgeFileName).waitFor({ state: 'visible', timeout: 120000 });
+    await page
+      .getByText(knowledgeFileName)
+      .waitFor({ state: 'visible', timeout: 120000 });
 
-    const knowledgeFileNameIsVisible = await page.getByText(knowledgeFileName).isVisible();
+    const knowledgeFileNameIsVisible = await page
+      .getByText(knowledgeFileName)
+      .isVisible();
     check(page, {
-      [`#${scenario.number} 経験知ファイル名が表示される`]: () => knowledgeFileNameIsVisible,
+      [`#${scenario.number} 経験知ファイル名が表示される`]: () =>
+        knowledgeFileNameIsVisible,
     });
 
     const startedAt = Date.now();
+    const extractionResponsePromise = waitForKnowledgeExtractionResponse(page);
 
     await clickEnabledButton(page, '経験知を抽出');
-    await page.getByText('抽出された経験知').waitFor({ state: 'visible', timeout: 120000 });
+    await extractionResponsePromise;
 
     scenario9KnowledgeExtractionProcessingDuration.add(Date.now() - startedAt);
+
+    await page
+      .getByText('抽出された経験知')
+      .waitFor({ state: 'visible', timeout: 120000 });
 
     const knowledgeRegistrationHeadingIsVisible = await page
       .getByRole('heading', { name: '経験知の登録', level: 2 })
       .isVisible();
-    const extractedKnowledgeHeadingIsVisible = await page.getByText('抽出された経験知').isVisible();
+    const extractedKnowledgeHeadingIsVisible = await page
+      .getByText('抽出された経験知')
+      .isVisible();
 
     check(page, {
       [`#${scenario.number} 経験知登録画面が表示される`]: () =>

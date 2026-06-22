@@ -30,7 +30,10 @@ export default async function applicationListNavigation() {
     number: 1,
     name: '申込書作成案件一覧画面',
     path: '/scb010101',
-    visibleLocators: (page) => [page.getByRole('heading', { name: '申込書一覧', level: 1 })],
+    responseTargets: [{ pathname: '/api/applications', method: 'GET' }],
+    visibleLocators: (page) => [
+      page.getByRole('heading', { name: '申込書一覧', level: 1 }),
+    ],
     trend: scenario1ApplicationListDuration,
   });
 }

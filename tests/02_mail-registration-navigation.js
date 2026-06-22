@@ -30,6 +30,7 @@ export default async function mailRegistrationNavigation() {
     number: 2,
     name: 'メール依頼内容登録画面',
     path: '/scb010102',
+    responseTargets: [{ pathname: '/scb010102', method: 'GET' }],
     visibleLocators: (page) => [
       page.getByRole('heading', { name: '申込書 - 依頼メール登録', level: 2 }),
     ],

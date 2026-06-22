@@ -30,7 +30,10 @@ export default async function knowledgeManagementNavigation() {
     number: 10,
     name: '経験知DB閲覧・編集画面',
     path: '/scg010302',
-    visibleLocators: (page) => [page.getByRole('heading', { name: '経験知管理', level: 1 })],
+    responseTargets: [{ pathname: '/api/knowledges/grouped', method: 'GET' }],
+    visibleLocators: (page) => [
+      page.getByRole('heading', { name: '経験知管理', level: 1 }),
+    ],
     trend: scenario10KnowledgeManagementDuration,
   });
 }

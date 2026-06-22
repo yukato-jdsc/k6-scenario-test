@@ -34,6 +34,16 @@ export default async function sendingMailDraftNavigation() {
     number: 7,
     name: '申込書送付メールドラフト・PDF確認画面',
     path: `/scd010101?applicationId=${encodeURIComponent(applicationId)}`,
+    responseTargets: [
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}`,
+        method: 'GET',
+      },
+      {
+        pathname: `/api/applications/${encodeURIComponent(applicationId)}/pdf`,
+        method: 'GET',
+      },
+    ],
     visibleLocators: (page) => [
       page.getByRole('heading', { name: '申込書送付メール', level: 2 }),
       page.getByRole('heading', { name: '申込書プレビュー', level: 2 }),
